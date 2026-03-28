@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cash Control PRO</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 { margin-top: 10px; color: #00c896; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      margin: 20px auto;
+      padding: 25px;
+      border-radius: 20px;
+      width: 320px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h3 { margin-top: 0; font-size: 1.2rem; }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    input:focus { outline: 2px solid #00c896; }
+
+    button {
+      width: 95%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 12px;
+      background: #00c896;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    button:hover {
+      background: #00a37b;
+      transform: scale(1.02);
+    }
+
+    #resultado {
+      margin: 15px 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .barra {
+      height: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progreso {
+      height: 100%;
+      background: #00ff88;
+      width: 0%;
+      transition: width 0.8s ease-in-out;
+      box-shadow: 0 0 10px #00ff88;
+    }
+
+    .logo {
+      border-radius: 50%;
+      margin-bottom: 10px;
+      border: 3px solid #00c896;
+    }
+  </style>
+</head>
+<body>
+
+<img src="https://i.pinimg.com/736x/33/4b/78/334b780f6f4315745b9eb05bd874302a.jpg" width="120" class="logo">
+<h1>💰 Cash Control PRO 💰</h1>
+
+<div class="card">
+  <h3>👤 Nuevo Usuario</h3>
+  <input id="nombre" placeholder="Nombre completo">
+  <input id="correo" type="email" placeholder="Correo electrónico">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button onclick="crearUsuario()">Registrar Cuenta</button>
+</div>
+
+<div class="card">
+  <h3>💸 Registrar Ahorro</h3>
+  <input id="userGasto" placeholder="Nombre de usuario o Correo">
+  <input id="monto" type="number" placeholder="Monto ($)">
+  <button onclick="agregarGasto()">Añadir al Cochinito</button>
+</div>
+
+<div class="card">
+  <h3>🎯 Definir Meta</h3>
+  <input id="userMeta" placeholder="Nombre de usuario o Correo">
+  <input id="meta" type="number" placeholder="Meta de ahorro ($)">
+  <button onclick="crearMeta()">Guardar Meta</button>
+</div>
+
+<div class="card">
+  <h3>📊 Mi Progreso</h3>
+  <input id="buscarUsuario" placeholder="Nombre de usuario o Correo">
+  <button onclick="verProgreso()">Consultar Estado</button>
+
+  <p id="resultado">Introduce tu usuario para ver el avance.</p>
+
+  <div class="barra">
+    <div class="progreso" id="barraProgreso"></div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:3000";
+
+// 1. Crear Usuario con estructura completa
+async function crearUsuario() {
+  const nombre = document.getElementById("nombre").value;
+  const correo = document.getElementById("correo").value;
+  const password = document.getElementById("password").value;
+
+  if (!nombre || !correo || !password) {
+    return alert("⚠️ Por favor rellena todos los campos.");
+  }
+
+  try {
+    const res = await fetch(`${API}/usuario`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, correo, password })
+    });
+
+    if (res.ok) {
+      alert("✅ ¡Usuario creado con éxito en MongoDB!");
+      document.getElementById("nombre").value = "";
+      document.getElementById("correo").value = "";
+      document.getElementById("password").value = "";
+    } else {
+      alert("❌ Error: No se pudo guardar el usuario.");
+    }
+  } catch (error) {
+    alert("❌ Error de conexión con el servidor.");
+  }
+}
+
+// 2. Agregar Gasto/Ahorro
+async function agregarGasto() {
+  const usuario = document.getElementById("userGasto").value;
+  const monto = parseFloat(document.getElementById("monto").value);
+
+  if (!usuario || isNaN(monto)) return alert("⚠️ Datos incompletos");
+
+  try {
+    const res = await fetch(`${API}/gasto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuario, monto })
+    });
+
+    if (res.ok) {
+      alert("💸 Ahorro registrado exitosamente.");
+      document.getElementById("monto").value = "";
+    }
+  } catch (error) {
+    alert("❌ Error al conectar.");
+  }
+}
+
+// 3. Crear Meta
+async function crearMeta() {
+  const usuario = document.getElementById("userMeta").value;
+  const meta = parseFloat(document.getElementById("meta").value);
+
+  if (!usuario || isNaN(meta)) return alert("⚠️ Datos incompletos");
+
+  try {
+    const res = await fetch(`${API}/meta`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuario, meta })
+    });
+
+    if (res.ok) {
+      alert("🎯 Meta de ahorro establecida.");
+      document.getElementById("meta").value = "";
+    }
+  } catch (error) {
+    alert("❌ Error al conectar.");
+  }
+}
+
+// 4. Ver Progreso Real
+async function verProgreso() {
+  const usuario = document.getElementById("buscarUsuario").value;
+  if (!usuario) return alert("⚠️ Escribe un usuario.");
+
+  try {
+    const res = await fetch(`${API}/progreso/${usuario}`);
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById("resultado").innerHTML = "❌ Usuario no encontrado.";
+      return;
+    }
+
+    document.getElementById("resultado").innerHTML = `
+      <strong>Usuario:</strong> ${usuario} <br>
+      <strong>Ahorro total:</strong> $${data.gastado} <br>
+      <strong>Meta:</strong> $${data.meta} <br>
+      <strong>Restante:</strong> $${data.restante}
+    `;
+
+    // Calcular porcentaje para la barra
+    let porcentaje = data.meta > 0 ? (data.gastado / data.meta) * 100 : 0;
+    // No dejar que pase del 100% visualmente
+    document.getElementById("barraProgreso").style.width = Math.min(porcentaje, 100) + "%";
+    
+  } catch (error) {
+    alert("❌ Error al obtener datos del servidor.");
+  }
+}
+</script>
+
+</body>
+</html>
